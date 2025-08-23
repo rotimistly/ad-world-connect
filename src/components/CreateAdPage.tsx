@@ -47,6 +47,7 @@ const CreateAdPage = () => {
     businessDescription: "",
     email: "",
     phoneNumber: "",
+    websiteUrl: "",
     whatsappLink: "",
     facebookHandle: "",
     instagramHandle: "",
@@ -119,6 +120,7 @@ const CreateAdPage = () => {
           business_description: businessData.businessDescription,
           email: businessData.email,
           phone_number: businessData.phoneNumber,
+          website_url: businessData.websiteUrl,
           whatsapp_link: businessData.whatsappLink,
           facebook_handle: businessData.facebookHandle,
           instagram_handle: businessData.instagramHandle,
@@ -279,6 +281,17 @@ const CreateAdPage = () => {
                     value={businessData.email}
                     onChange={(e) => setBusinessData(prev => ({ ...prev, email: e.target.value }))}
                     required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="websiteUrl">Website/App URL</Label>
+                  <Input
+                    id="websiteUrl"
+                    type="url"
+                    placeholder="https://yourbusiness.com"
+                    value={businessData.websiteUrl}
+                    onChange={(e) => setBusinessData(prev => ({ ...prev, websiteUrl: e.target.value }))}
                   />
                 </div>
 
