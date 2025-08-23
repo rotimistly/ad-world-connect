@@ -4,9 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import heroBackground from "@/assets/hero-background.jpg";
 
 const HomePage = () => {
-  const scrollToSetup = () => {
-    const setupSection = document.getElementById('setup-section');
-    setupSection?.scrollIntoView({ behavior: 'smooth' });
+  const navigateToAuth = () => {
+    window.location.href = '/auth';
   };
 
   return (
@@ -28,7 +27,7 @@ const HomePage = () => {
             <Button 
               variant="premium" 
               size="lg"
-              onClick={scrollToSetup}
+              onClick={navigateToAuth}
               className="text-lg px-8 py-6"
             >
               Start Advertising <ArrowRight className="ml-2" />
@@ -194,7 +193,7 @@ const HomePage = () => {
           <Button 
             variant="premium" 
             size="lg"
-            onClick={scrollToSetup}
+            onClick={navigateToAuth}
             className="text-lg px-8 py-6 bg-white/20 hover:bg-white/30 border-white/30"
           >
             Get Started Today <ArrowRight className="ml-2" />

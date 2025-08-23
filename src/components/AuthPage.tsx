@@ -36,7 +36,9 @@ const AuthPage = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // For development, we'll disable email confirmation temporarily
+      // In production, you should enable email confirmation in Supabase Auth settings
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -49,10 +51,23 @@ const AuthPage = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Account created successfully!",
-        description: "Please check your email to confirm your account.",
-      });
+      // Check if user is immediately confirmed (email confirmation disabled)
+      if (data.user && !data.user.email_confirmed_at) {
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to confirm your account before signing in.",
+        });
+      } else if (data.user && data.user.email_confirmed_at) {
+        toast({
+          title: "Account created and confirmed!",
+          description: "You can now sign in to your account.",
+        });
+      } else {
+        toast({
+          title: "Account created!",
+          description: "You can now sign in to your account.",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -69,23 +84,35 @@ const AuthPage = () => {
     setIsLoading(true);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
-      
-      window.location.href = '/dashboard';
+      if (data.user) {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully signed in.",
+        });
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard';
+      }
     } catch (error: any) {
+      let errorMessage = error.message;
+      
+      // Provide more user-friendly error messages
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = "Please check your email and click the confirmation link before signing in.";
+      }
+      
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Sign In Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
