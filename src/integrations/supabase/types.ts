@@ -21,16 +21,22 @@ export type Database = {
           body_text: string
           business_id: string | null
           call_to_action: string | null
+          clicks: number | null
           created_at: string
+          distance_km: number
           expires_at: string | null
+          fixed_price_expires_at: string | null
           headline: string
           id: string
+          is_fixed_price: boolean | null
+          messages: number | null
           paid: boolean | null
           performance_tips: string[] | null
           price_paid: number | null
           published_at: string | null
           region: string | null
           target_keywords: string[] | null
+          views: number | null
         }
         Insert: {
           ad_format: string
@@ -38,16 +44,22 @@ export type Database = {
           body_text: string
           business_id?: string | null
           call_to_action?: string | null
+          clicks?: number | null
           created_at?: string
+          distance_km?: number
           expires_at?: string | null
+          fixed_price_expires_at?: string | null
           headline: string
           id?: string
+          is_fixed_price?: boolean | null
+          messages?: number | null
           paid?: boolean | null
           performance_tips?: string[] | null
           price_paid?: number | null
           published_at?: string | null
           region?: string | null
           target_keywords?: string[] | null
+          views?: number | null
         }
         Update: {
           ad_format?: string
@@ -55,16 +67,22 @@ export type Database = {
           body_text?: string
           business_id?: string | null
           call_to_action?: string | null
+          clicks?: number | null
           created_at?: string
+          distance_km?: number
           expires_at?: string | null
+          fixed_price_expires_at?: string | null
           headline?: string
           id?: string
+          is_fixed_price?: boolean | null
+          messages?: number | null
           paid?: boolean | null
           performance_tips?: string[] | null
           price_paid?: number | null
           published_at?: string | null
           region?: string | null
           target_keywords?: string[] | null
+          views?: number | null
         }
         Relationships: [
           {
@@ -145,16 +163,51 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          ad_id: string
+          created_at: string
+          id: string
+          message: string
+          platform: string
+          sender_email: string
+          sender_name: string
+          sender_phone: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          id?: string
+          message: string
+          platform: string
+          sender_email: string
+          sender_name: string
+          sender_phone?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          platform?: string
+          sender_email?: string
+          sender_name?: string
+          sender_phone?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           ad_id: string
           amount: number
           created_at: string
+          currency: string | null
           id: string
           payment_method: string | null
+          paystack_access_code: string | null
+          paystack_reference: string | null
           region: string
           status: string | null
-          transaction_id: string | null
           updated_at: string
           user_id: string
         }
@@ -162,11 +215,13 @@ export type Database = {
           ad_id: string
           amount: number
           created_at?: string
+          currency?: string | null
           id?: string
           payment_method?: string | null
+          paystack_access_code?: string | null
+          paystack_reference?: string | null
           region: string
           status?: string | null
-          transaction_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -174,11 +229,13 @@ export type Database = {
           ad_id?: string
           amount?: number
           created_at?: string
+          currency?: string | null
           id?: string
           payment_method?: string | null
+          paystack_access_code?: string | null
+          paystack_reference?: string | null
           region?: string
           status?: string | null
-          transaction_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -216,12 +273,43 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_ad_price: {
+        Args: { distance_km: number; is_fixed_price?: boolean }
+        Returns: number
+      }
+      track_ad_engagement: {
+        Args: { p_ad_id: string; p_engagement_type: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
