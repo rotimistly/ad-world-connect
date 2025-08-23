@@ -353,21 +353,22 @@ export type Database = {
       }
     }
     Views: {
-      admin_stats: {
-        Row: {
-          paid_ads: number | null
-          total_ads: number | null
-          total_businesses: number | null
-          total_messages: number | null
-          total_users: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_ad_price: {
         Args: { distance_km: number; is_fixed_price?: boolean }
         Returns: number
+      }
+      get_admin_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          paid_ads: number
+          total_ads: number
+          total_businesses: number
+          total_messages: number
+          total_users: number
+        }[]
       }
       has_role: {
         Args: {

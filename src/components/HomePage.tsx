@@ -1,15 +1,59 @@
-import { ArrowRight, Globe, Target, Zap, Star, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, Globe, Target, Zap, Star, Users, TrendingUp, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import heroBackground from "@/assets/hero-background.jpg";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const HomePage = () => {
+  const { user } = useAuth();
+  const { isAdmin } = useAdmin();
+  
   const navigateToAuth = () => {
     window.location.href = '/auth';
   };
 
   return (
     <div className="min-h-screen">
+      {/* Admin Navigation */}
+      {user && (
+        <div className="bg-background border-b">
+          <div className="container mx-auto px-4 py-2">
+            <div className="flex justify-between items-center">
+              <div className="flex gap-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.location.href = '/dashboard'}
+                >
+                  Dashboard
+                </Button>
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.location.href = '/admin'}
+                    className="flex items-center gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin Panel
+                  </Button>
+                )}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Welcome back, {user.email}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Announcements */}
+      <div className="container mx-auto px-4 py-6">
+        <AnnouncementBanner />
+      </div>
+
       {/* Hero Section */}
       <section 
         className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"

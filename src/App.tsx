@@ -11,6 +11,7 @@ import UserDashboard from "./components/UserDashboard";
 import CreateAdPage from "./components/CreateAdPage";
 import PaymentPage from "./components/PaymentPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./components/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,11 @@ const App = () => (
             <Route path="/payment/:paymentId" element={
               <ProtectedRoute>
                 <PaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
