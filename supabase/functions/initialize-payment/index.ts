@@ -48,14 +48,23 @@ const handler = async (req: Request): Promise<Response> => {
         'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        email: email,
-        amount: Math.round(amount * 100), // Paystack expects amount in kobo
-        reference: reference,
-        currency: currency || 'USD',
-        callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment?reference=${reference}`,
-        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer', 'eft']
-      }),
+        body: JSON.stringify({
+          email: email,
+          amount: Math.round(amount * 100), // Paystack expects amount in kobo for NGN, cents for USD
+          reference: reference,
+          currency: currency || 'USD',
+          callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment?reference=${reference}`,
+          channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer', 'eft'],
+          metadata: {
+            custom_fields: [
+              {
+                display_name: "Payment Type",
+                variable_name: "payment_type",
+                value: "ad_boost"
+              }
+            ]
+          }
+        }),
     });
 
     const paystackData = await paystackResponse.json();

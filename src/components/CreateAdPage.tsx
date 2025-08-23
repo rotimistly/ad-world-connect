@@ -37,7 +37,7 @@ const CreateAdPage = () => {
     bodyText: "",
     callToAction: "",
     region: "",
-    distanceKm: 2,
+    distanceKm: 200,
     customPrice: "",
     targetKeywords: "",
     adFormat: "text"
@@ -97,7 +97,16 @@ const CreateAdPage = () => {
     if (isFixedPrice && adData.customPrice) {
       return parseFloat(adData.customPrice);
     }
-    return adData.distanceKm <= 2 ? 4.00 : 5.00;
+    
+    // New pricing structure starting from 200km
+    if (adData.distanceKm < 200) {
+      return 4.00; // Base price for distances under 200km
+    } else if (adData.distanceKm < 600) {
+      return 5.00; // Standard price for 200-599km  
+    } else {
+      // For 600km and above, increase by $0.07 for every 100km above 600
+      return 5.00 + (Math.floor((adData.distanceKm - 600) / 100) * 0.07);
+    }
   };
 
   const handleCreateBusiness = async () => {
@@ -409,11 +418,19 @@ const CreateAdPage = () => {
                   <Label htmlFor="targetKeywords">Target Keywords</Label>
                   <Input
                     id="targetKeywords"
-                    placeholder="keyword1, keyword2, keyword3"
+                    placeholder="restaurant food delivery, pizza, italian cuisine"
                     value={adData.targetKeywords}
                     onChange={(e) => setAdData(prev => ({ ...prev, targetKeywords: e.target.value }))}
                   />
-                  <p className="text-xs text-muted-foreground">Separate keywords with commas</p>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>Enter keywords your customers would search for. Examples:</p>
+                    <ul className="list-disc list-inside ml-2 space-y-1">
+                      <li>For restaurants: "pizza delivery, italian food, takeout"</li>
+                      <li>For services: "plumber, emergency repair, home services"</li>
+                      <li>For retail: "clothing store, fashion, women's apparel"</li>
+                    </ul>
+                    <p className="font-medium">Separate keywords with commas</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -445,14 +462,26 @@ const CreateAdPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="2">2 km - $4.00</SelectItem>
-                      <SelectItem value="3">3 km - $5.00</SelectItem>
-                      <SelectItem value="5">5 km - $5.00</SelectItem>
-                      <SelectItem value="10">10 km - $5.00</SelectItem>
-                      <SelectItem value="25">25 km - $5.00</SelectItem>
-                      <SelectItem value="50">50 km - $5.00</SelectItem>
+                      <SelectItem value="100">100 km - $4.00</SelectItem>
+                      <SelectItem value="150">150 km - $4.00</SelectItem>
+                      <SelectItem value="200">200 km - $5.00</SelectItem>
+                      <SelectItem value="300">300 km - $5.00</SelectItem>
+                      <SelectItem value="400">400 km - $5.00</SelectItem>
+                      <SelectItem value="500">500 km - $5.00</SelectItem>
+                      <SelectItem value="600">600 km - $5.00</SelectItem>
+                      <SelectItem value="700">700 km - $5.07</SelectItem>
+                      <SelectItem value="800">800 km - $5.14</SelectItem>
+                      <SelectItem value="1000">1000 km - $5.28</SelectItem>
+                      <SelectItem value="1200">1200 km - $5.42</SelectItem>
+                      <SelectItem value="1500">1500 km - $5.63</SelectItem>
+                      <SelectItem value="2000">2000 km - $5.98</SelectItem>
+                      <SelectItem value="2500">2500 km - $6.33</SelectItem>
+                      <SelectItem value="3000">3000 km - $6.68</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Pricing increases by $0.07 for every 100km above 600km for global reach
+                  </p>
                 </div>
 
                 <div className="space-y-4">
