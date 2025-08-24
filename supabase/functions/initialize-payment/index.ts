@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: email,
           amount: Math.round(amount * 100), // Paystack expects amount in kobo for NGN, cents for USD
           reference: reference,
-          currency: currency || 'USD',
+          currency: currency || 'NGN',
           callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment?reference=${reference}`,
           channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer', 'eft'],
           metadata: {

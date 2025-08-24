@@ -87,12 +87,21 @@ const PaymentPage = () => {
   const initializePayment = async () => {
     setIsProcessing(true);
     try {
+      // Ensure user email is available
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userEmail = sessionData.session?.user.email;
+      if (!userEmail) {
+        toast({ title: "Error", description: "Please log in again to continue.", variant: "destructive" });
+        setIsProcessing(false);
+        return;
+      }
+
       // Call edge function to initialize Paystack payment
       const { data, error } = await supabase.functions.invoke('initialize-payment', {
         body: {
           paymentId,
           amount: payment!.amount,
-          email: (await supabase.auth.getSession()).data.session?.user.email,
+          email: userEmail,
           currency: payment!.currency
         }
       });

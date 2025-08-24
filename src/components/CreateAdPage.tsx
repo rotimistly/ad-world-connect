@@ -204,7 +204,7 @@ const CreateAdPage = () => {
           ad_id: adResult.id,
           amount: price,
           region: adData.region,
-          currency: 'USD',
+          currency: 'NGN',
           status: 'pending',
           payment_method: 'paystack'
         })
