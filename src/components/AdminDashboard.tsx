@@ -74,6 +74,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [ads, setAds] = useState<Ad[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [activeDetailView, setActiveDetailView] = useState<string | null>(null);
   
   // Announcement form state
   const [newAnnouncement, setNewAnnouncement] = useState({
@@ -309,56 +310,146 @@ const AdminDashboard = () => {
         {/* Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setActiveDetailView(activeDetailView === 'users' ? null : 'users')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.total_users}</div>
+                <p className="text-xs text-muted-foreground">Click to view details</p>
               </CardContent>
             </Card>
             
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setActiveDetailView(activeDetailView === 'ads' ? null : 'ads')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Ads</CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.total_ads}</div>
+                <p className="text-xs text-muted-foreground">Click to view details</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setActiveDetailView(activeDetailView === 'paid-ads' ? null : 'paid-ads')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Paid Ads</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.paid_ads}</div>
+                <p className="text-xs text-muted-foreground">Click to view details</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setActiveDetailView(activeDetailView === 'businesses' ? null : 'businesses')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Businesses</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.total_businesses}</div>
+                <p className="text-xs text-muted-foreground">Click to view details</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card 
+              className="cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => setActiveDetailView(activeDetailView === 'messages' ? null : 'messages')}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Messages</CardTitle>
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.total_messages}</div>
+                <p className="text-xs text-muted-foreground">Click to view details</p>
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Detail Views */}
+        {activeDetailView && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>
+                {activeDetailView === 'users' && 'All Users'}
+                {activeDetailView === 'ads' && 'All Ads'}
+                {activeDetailView === 'paid-ads' && 'Paid Ads'}
+                {activeDetailView === 'businesses' && 'All Businesses'}
+                {activeDetailView === 'messages' && 'All Messages'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {activeDetailView === 'users' && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Full Name</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.full_name || 'N/A'}</TableCell>
+                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+              
+              {(activeDetailView === 'ads' || activeDetailView === 'paid-ads') && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Headline</TableHead>
+                      <TableHead>Business</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Views</TableHead>
+                      <TableHead>Clicks</TableHead>
+                      <TableHead>Messages</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(activeDetailView === 'paid-ads' ? ads.filter(ad => ad.paid) : ads).map((ad) => (
+                      <TableRow key={ad.id}>
+                        <TableCell>{ad.headline}</TableCell>
+                        <TableCell>{ad.business_name}</TableCell>
+                        <TableCell>
+                          <Badge variant={ad.paid ? "default" : "secondary"}>
+                            {ad.paid ? "Paid" : "Unpaid"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{ad.views}</TableCell>
+                        <TableCell>{ad.clicks}</TableCell>
+                        <TableCell>{ad.messages}</TableCell>
+                        <TableCell>{new Date(ad.created_at).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <Tabs defaultValue="users" className="space-y-6">

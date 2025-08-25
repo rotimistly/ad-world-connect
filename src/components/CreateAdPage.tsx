@@ -31,16 +31,15 @@ const CreateAdPage = () => {
   const [selectedBusiness, setSelectedBusiness] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showBusinessForm, setShowBusinessForm] = useState(false);
-  const [isFixedPrice, setIsFixedPrice] = useState(false);
+  
   const [adData, setAdData] = useState({
-    headline: "",
-    bodyText: "",
-    callToAction: "",
-    region: "",
-    distanceKm: 200,
-    customPrice: "",
-    targetKeywords: "",
-    adFormat: "text"
+    headline: '',
+    bodyText: '',
+    callToAction: '',
+    targetKeywords: '',
+    region: '',
+    distanceKm: 100,
+    customDays: 1
   });
   const [businessData, setBusinessData] = useState({
     businessName: "",
@@ -94,20 +93,61 @@ const CreateAdPage = () => {
     }
   };
 
-  const calculatePrice = () => {
-    if (isFixedPrice && adData.customPrice) {
-      return parseFloat(adData.customPrice);
+  const calculateDistancePrice = (distanceKm: number) => {
+    if (distanceKm <= 100) {
+      return 5.00; // Base price for 100km
     }
     
-    // New pricing structure starting from 200km
-    if (adData.distanceKm < 200) {
-      return 4.00; // Base price for distances under 200km
-    } else if (adData.distanceKm < 600) {
-      return 5.00; // Standard price for 200-599km  
-    } else {
-      // For 600km and above, increase by $0.07 for every 100km above 600
-      return 5.00 + (Math.floor((adData.distanceKm - 600) / 100) * 0.07);
+    // Calculate cumulative price with 90% increment for each tier
+    let totalPrice = 5.00; // Base price for 100km
+    let currentPrice = 5.00;
+    
+    const tiers = [
+      { max: 200, label: "200km" },
+      { max: 300, label: "300km" },
+      { max: 400, label: "400km" },
+      { max: 500, label: "500km" },
+      { max: 1000, label: "1000km" },
+      { max: 2000, label: "2000km" },
+      { max: 5000, label: "5000km" },
+      { max: 10000, label: "10000km" },
+      { max: 20000, label: "20000km" },
+      { max: 40000, label: "40000km" },
+      { max: 60000, label: "60000km" }
+    ];
+    
+    for (const tier of tiers) {
+      if (distanceKm > (tier.max === 200 ? 100 : tiers[tiers.indexOf(tier) - 1]?.max || 100) && distanceKm <= tier.max) {
+        currentPrice = currentPrice * 1.9; // Add 90% of previous price
+        totalPrice = currentPrice;
+        break;
+      }
+      if (distanceKm > tier.max) {
+        currentPrice = currentPrice * 1.9;
+        totalPrice = currentPrice;
+      }
     }
+    
+    return totalPrice;
+  };
+
+  const calculateDaysPrice = (basePrice: number, days: number) => {
+    if (days <= 1) return basePrice;
+    
+    let totalPrice = basePrice;
+    let currentDayPrice = basePrice;
+    
+    for (let day = 2; day <= days; day++) {
+      currentDayPrice = currentDayPrice * 1.9; // Add 90% of previous day
+      totalPrice += currentDayPrice;
+    }
+    
+    return totalPrice;
+  };
+
+  const calculatePrice = () => {
+    const distancePrice = calculateDistancePrice(adData.distanceKm);
+    return calculateDaysPrice(distancePrice, adData.customDays || 1);
   };
 
   const handleCreateBusiness = async () => {
@@ -163,33 +203,29 @@ const CreateAdPage = () => {
     setIsLoading(true);
     try {
       const price = calculatePrice();
-      const expiresAt = new Date();
-      const fixedPriceExpiresAt = new Date();
       
-      // Standard ads expire in 30 days, fixed price ads in 4 days
-      if (isFixedPrice) {
-        fixedPriceExpiresAt.setDate(fixedPriceExpiresAt.getDate() + 4);
-      } else {
-        expiresAt.setDate(expiresAt.getDate() + 30);
-      }
+      // Set expiration dates based on custom days
+      const expiresAt = new Date();
+      const customDays = adData.customDays || 1;
+      expiresAt.setDate(expiresAt.getDate() + customDays);
 
       // Create the ad
       const { data: adResult, error: adError } = await supabase
         .from('ads')
         .insert({
           business_id: selectedBusiness,
-          ad_format: adData.adFormat,
+          ad_format: 'text',
           headline: adData.headline,
           body_text: adData.bodyText,
           call_to_action: adData.callToAction,
           target_keywords: adData.targetKeywords.split(',').map(k => k.trim()).filter(k => k),
           region: adData.region,
           distance_km: adData.distanceKm,
+          paid: false,
           price_paid: price,
-          is_fixed_price: isFixedPrice,
-          fixed_price_expires_at: isFixedPrice ? fixedPriceExpiresAt.toISOString() : null,
           expires_at: expiresAt.toISOString(),
-          paid: false
+          is_fixed_price: false,
+          fixed_price_expires_at: null
         })
         .select()
         .single();
@@ -475,62 +511,51 @@ const CreateAdPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="100">100 km - $4.00</SelectItem>
-                      <SelectItem value="150">150 km - $4.00</SelectItem>
-                      <SelectItem value="200">200 km - $5.00</SelectItem>
-                      <SelectItem value="300">300 km - $5.00</SelectItem>
-                      <SelectItem value="400">400 km - $5.00</SelectItem>
-                      <SelectItem value="500">500 km - $5.00</SelectItem>
-                      <SelectItem value="600">600 km - $5.00</SelectItem>
-                      <SelectItem value="700">700 km - $5.07</SelectItem>
-                      <SelectItem value="800">800 km - $5.14</SelectItem>
-                      <SelectItem value="1000">1000 km - $5.28</SelectItem>
-                      <SelectItem value="1200">1200 km - $5.42</SelectItem>
-                      <SelectItem value="1500">1500 km - $5.63</SelectItem>
-                      <SelectItem value="2000">2000 km - $5.98</SelectItem>
-                      <SelectItem value="2500">2500 km - $6.33</SelectItem>
-                      <SelectItem value="3000">3000 km - $6.68</SelectItem>
+                      <SelectItem value="100">100 km - ${calculateDistancePrice(100).toFixed(2)}</SelectItem>
+                      <SelectItem value="200">200 km - ${calculateDistancePrice(200).toFixed(2)}</SelectItem>
+                      <SelectItem value="300">300 km - ${calculateDistancePrice(300).toFixed(2)}</SelectItem>
+                      <SelectItem value="400">400 km - ${calculateDistancePrice(400).toFixed(2)}</SelectItem>
+                      <SelectItem value="500">500 km - ${calculateDistancePrice(500).toFixed(2)}</SelectItem>
+                      <SelectItem value="1000">1000 km - ${calculateDistancePrice(1000).toFixed(2)}</SelectItem>
+                      <SelectItem value="2000">2000 km - ${calculateDistancePrice(2000).toFixed(2)}</SelectItem>
+                      <SelectItem value="5000">5000 km - ${calculateDistancePrice(5000).toFixed(2)}</SelectItem>
+                      <SelectItem value="10000">10000 km - ${calculateDistancePrice(10000).toFixed(2)}</SelectItem>
+                      <SelectItem value="20000">20000 km - ${calculateDistancePrice(20000).toFixed(2)}</SelectItem>
+                      <SelectItem value="40000">40000 km - ${calculateDistancePrice(40000).toFixed(2)}</SelectItem>
+                      <SelectItem value="60000">60000 km - ${calculateDistancePrice(60000).toFixed(2)}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Pricing increases by $0.07 for every 100km above 600km for global reach
+                    Pricing increases by 90% for each distance tier above 100km
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label>Fixed Price (4-day duration)</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Set your own price, ad will run for exactly 4 days
-                      </p>
-                    </div>
-                    <Switch
-                      checked={isFixedPrice}
-                      onCheckedChange={setIsFixedPrice}
-                    />
+                  <div className="space-y-2">
+                    <Label htmlFor="customDays">Ad Duration (Days)</Label>
+                    <Select 
+                      value={adData.customDays?.toString() || "1"} 
+                      onValueChange={(value) => setAdData(prev => ({ ...prev, customDays: parseInt(value) }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 Day - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 1).toFixed(2)}</SelectItem>
+                        <SelectItem value="2">2 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 2).toFixed(2)}</SelectItem>
+                        <SelectItem value="3">3 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 3).toFixed(2)}</SelectItem>
+                        <SelectItem value="4">4 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 4).toFixed(2)}</SelectItem>
+                        <SelectItem value="5">5 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 5).toFixed(2)}</SelectItem>
+                        <SelectItem value="7">7 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 7).toFixed(2)}</SelectItem>
+                        <SelectItem value="10">10 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 10).toFixed(2)}</SelectItem>
+                        <SelectItem value="14">14 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 14).toFixed(2)}</SelectItem>
+                        <SelectItem value="30">30 Days - ${calculateDaysPrice(calculateDistancePrice(adData.distanceKm), 30).toFixed(2)}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Each additional day costs 90% more than the previous day
+                    </p>
                   </div>
-
-                  {isFixedPrice && (
-                    <div className="space-y-2">
-                      <Label htmlFor="customPrice">Your Price ($)</Label>
-                      <Input
-                        id="customPrice"
-                        type="number"
-                        step="0.01"
-                        min="1"
-                        placeholder="10.00"
-                        value={adData.customPrice}
-                        onChange={(e) => setAdData(prev => ({ ...prev, customPrice: e.target.value }))}
-                      />
-                      <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                        <AlertCircle className="w-4 h-4 text-orange-500" />
-                        <p className="text-sm text-orange-700">
-                          Fixed price ads last only 4 days regardless of payment amount
-                        </p>
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="bg-card p-4 rounded-lg border">
@@ -544,7 +569,7 @@ const CreateAdPage = () => {
                         ${calculatePrice().toFixed(2)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {isFixedPrice ? '4 days duration' : '30 days duration'}
+                        {adData.customDays || 1} {(adData.customDays || 1) === 1 ? 'day' : 'days'} duration
                       </div>
                     </div>
                   </div>

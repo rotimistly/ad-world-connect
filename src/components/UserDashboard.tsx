@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Plus, Eye, MousePointer, MessageCircle, Calendar, DollarSign, Trash2, LogOut } from "lucide-react";
+import { User, Plus, Eye, MousePointer, MessageCircle, Calendar, DollarSign, Trash2, LogOut, Menu, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -54,6 +54,8 @@ const UserDashboard = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -116,6 +118,30 @@ const UserDashboard = () => {
           });
           setContactMessages(transformedMessages);
         }
+
+        // Load announcements
+        const { data: announcementsData, error: announcementsError } = await supabase
+          .from('announcements')
+          .select('*')
+          .eq('is_published', true)
+          .order('priority', { ascending: false })
+          .order('created_at', { ascending: false });
+
+        if (!announcementsError && announcementsData) {
+          setAnnouncements(announcementsData);
+        }
+      }
+
+      // Load announcements for all users
+      const { data: announcementsData, error: announcementsError } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('is_published', true)
+        .order('priority', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (!announcementsError && announcementsData) {
+        setAnnouncements(announcementsData);
       }
     } catch (error: any) {
       toast({
@@ -220,6 +246,13 @@ const UserDashboard = () => {
             <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name || user?.email}</p>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
+            >
+              {showHamburgerMenu ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </Button>
             <Button onClick={() => window.location.href = '/create-ad'} className="shadow-elegant">
               <Plus className="w-4 h-4 mr-2" />
               Create Ad
@@ -230,6 +263,37 @@ const UserDashboard = () => {
             </Button>
           </div>
         </div>
+
+        {/* Hamburger Menu */}
+        {showHamburgerMenu && (
+          <Card className="mb-6 shadow-elegant">
+            <CardHeader>
+              <CardTitle>User Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Email</Label>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Full Name</Label>
+                  <p className="text-sm text-muted-foreground">{user?.user_metadata?.full_name || 'Not provided'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Total Businesses</Label>
+                  <p className="text-sm text-muted-foreground">{businesses.length}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Account Created</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(user?.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -520,6 +584,20 @@ const UserDashboard = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Moving Announcements Banner */}
+        {announcements.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-primary text-primary-foreground py-2 overflow-hidden z-50">
+            <div className="animate-marquee whitespace-nowrap">
+              {announcements.map((announcement, index) => (
+                <span key={announcement.id} className="inline-block px-8">
+                  📢 {announcement.title}: {announcement.content}
+                  {index < announcements.length - 1 && " • "}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
