@@ -12,6 +12,7 @@ import CreateAdPage from "./components/CreateAdPage";
 import PaymentPage from "./components/PaymentPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./components/AdminDashboard";
+import AdsListingPage from "./components/AdsListingPage";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/ads" element={<AdsListingPage />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <UserDashboard />
