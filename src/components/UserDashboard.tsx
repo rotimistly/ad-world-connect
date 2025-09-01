@@ -268,27 +268,59 @@ const UserDashboard = () => {
         {showHamburgerMenu && (
           <Card className="mb-6 shadow-elegant">
             <CardHeader>
-              <CardTitle>User Details</CardTitle>
+              <CardTitle>Quick Navigation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium">Email</Label>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Full Name</Label>
-                  <p className="text-sm text-muted-foreground">{user?.user_metadata?.full_name || 'Not provided'}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Total Businesses</Label>
-                  <p className="text-sm text-muted-foreground">{businesses.length}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Account Created</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(user?.created_at).toLocaleDateString()}
-                  </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <Button 
+                  onClick={() => window.location.href = '/create-ad'}
+                  className="h-16 text-left justify-start gap-4"
+                  variant="outline"
+                >
+                  <Plus className="w-8 h-8" />
+                  <div>
+                    <div className="font-medium">Create New Ad</div>
+                    <div className="text-sm text-muted-foreground">
+                      Post a new advertisement
+                    </div>
+                  </div>
+                </Button>
+                <Button 
+                  onClick={() => window.location.href = '/dashboard'}
+                  className="h-16 text-left justify-start gap-4"
+                  variant="outline"
+                >
+                  <User className="w-8 h-8" />
+                  <div>
+                    <div className="font-medium">Dashboard</div>
+                    <div className="text-sm text-muted-foreground">
+                      Back to main dashboard
+                    </div>
+                  </div>
+                </Button>
+              </div>
+              
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold mb-3">User Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Email</Label>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Full Name</Label>
+                    <p className="text-sm text-muted-foreground">{user?.user_metadata?.full_name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Total Businesses</Label>
+                    <p className="text-sm text-muted-foreground">{businesses.length}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Account Created</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(user?.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
