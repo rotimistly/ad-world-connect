@@ -6,9 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Search, MapPin, Calendar, Eye, MousePointer, MessageCircle, Phone, Mail, ExternalLink } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Ad {
@@ -28,9 +26,15 @@ interface Ad {
     business_name: string;
     phone_number: string;
     email: string;
+    whatsapp_number: string;
     whatsapp_link: string;
     website_url: string;
     business_description: string;
+    facebook_handle: string;
+    instagram_handle: string;
+    twitter_handle: string;
+    linkedin_handle: string;
+    tiktok_handle: string;
   };
 }
 
@@ -40,16 +44,6 @@ const AdsListingPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRegion, setSelectedRegion] = useState("all");
-  const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
-  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
-  const [contactForm, setContactForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-    platform: "website"
-  });
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -70,9 +64,15 @@ const AdsListingPage = () => {
             business_name,
             phone_number,
             email,
+            whatsapp_number,
             whatsapp_link,
             website_url,
-            business_description
+            business_description,
+            facebook_handle,
+            instagram_handle,
+            twitter_handle,
+            linkedin_handle,
+            tiktok_handle
           )
         `)
         .eq('paid', true)
@@ -143,59 +143,6 @@ const AdsListingPage = () => {
     }
   };
 
-  const handleContactSubmit = async () => {
-    if (!selectedAd || !contactForm.name || !contactForm.email || !contactForm.message) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsSubmittingContact(true);
-    try {
-      // Save contact message
-      const { error } = await supabase
-        .from('contact_messages')
-        .insert({
-          ad_id: selectedAd.id,
-          sender_name: contactForm.name,
-          sender_email: contactForm.email,
-          sender_phone: contactForm.phone,
-          message: contactForm.message,
-          platform: contactForm.platform
-        });
-
-      if (error) throw error;
-
-      // Track message engagement
-      await supabase.functions.invoke('track-engagement', {
-        body: { adId: selectedAd.id, type: 'message' }
-      });
-
-      // Update local state
-      setAds(prev => prev.map(a => 
-        a.id === selectedAd.id ? { ...a, messages: a.messages + 1 } : a
-      ));
-
-      toast({
-        title: "Success",
-        description: "Your message has been sent to the business owner!",
-      });
-
-      setIsContactDialogOpen(false);
-      setContactForm({ name: "", email: "", phone: "", message: "", platform: "website" });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmittingContact(false);
-    }
-  };
 
   const regions = [...new Set(ads.map(ad => ad.region))];
 
@@ -265,7 +212,6 @@ const AdsListingPage = () => {
               className="shadow-elegant hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => {
                 handleViewAd(ad);
-                setSelectedAd(ad);
               }}
             >
               <CardHeader>
@@ -315,22 +261,68 @@ const AdsListingPage = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
-                    <DialogTrigger asChild>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button 
                         size="sm" 
                         className="flex-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedAd(ad);
-                          setIsContactDialogOpen(true);
-                        }}
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <MessageCircle className="w-4 h-4 mr-1" />
-                        Contact
+                        Contact Now
                       </Button>
-                    </DialogTrigger>
-                  </Dialog>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      {ad.businesses.whatsapp_link && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdClick(ad);
+                            window.open(ad.businesses.whatsapp_link, '_blank');
+                          }}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          WhatsApp
+                        </DropdownMenuItem>
+                      )}
+                      {ad.businesses.phone_number && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdClick(ad);
+                            window.open(`tel:${ad.businesses.phone_number}`, '_self');
+                          }}
+                        >
+                          <Phone className="w-4 h-4 mr-2" />
+                          Call Now
+                        </DropdownMenuItem>
+                      )}
+                      {ad.businesses.email && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdClick(ad);
+                            window.open(`mailto:${ad.businesses.email}`, '_self');
+                          }}
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send Email
+                        </DropdownMenuItem>
+                      )}
+                      {ad.businesses.website_url && (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAdClick(ad);
+                            window.open(ad.businesses.website_url, '_blank');
+                          }}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Visit Website
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   
                   {ad.businesses.website_url && (
                     <Button 
@@ -359,86 +351,6 @@ const AdsListingPage = () => {
           </div>
         )}
 
-        {/* Contact Dialog */}
-        <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Contact {selectedAd?.businesses.business_name}</DialogTitle>
-              <DialogDescription>
-                Send a message about "{selectedAd?.headline}"
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  value={contactForm.name}
-                  onChange={(e) => setContactForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Your full name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="your.email@example.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={contactForm.phone}
-                  onChange={(e) => setContactForm(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="Your phone number"
-                />
-              </div>
-              <div>
-                <Label htmlFor="message">Message *</Label>
-                <Textarea
-                  id="message"
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm(prev => ({ ...prev, message: e.target.value }))}
-                  placeholder="Tell them about your interest..."
-                  rows={4}
-                />
-              </div>
-              <div>
-                <Label htmlFor="platform">Contact Platform</Label>
-                <Select value={contactForm.platform} onValueChange={(value) => setContactForm(prev => ({ ...prev, platform: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="phone">Phone</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleContactSubmit}
-                  disabled={isSubmittingContact}
-                  className="flex-1"
-                >
-                  {isSubmittingContact ? "Sending..." : "Send Message"}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsContactDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
