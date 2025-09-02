@@ -134,13 +134,13 @@ const CreateAdPage = () => {
   const calculateDaysPrice = (basePrice: number, days: number) => {
     if (days <= 1) return basePrice;
     
-    let totalPrice = basePrice;
+    let totalPrice = basePrice; // Start with day 1 cost
     let currentDayPrice = basePrice;
     
     for (let day = 2; day <= Math.min(days, 30); day++) {
-      const additionalPrice = currentDayPrice * 0.9; // 90% of current price
-      currentDayPrice += additionalPrice;
-      totalPrice = currentDayPrice; // Total for all days combined
+      const additionalPrice = currentDayPrice * 0.9; // 90% of previous day's price
+      currentDayPrice += additionalPrice; // New day price = previous + 90%
+      totalPrice += currentDayPrice; // Add this day's cost to total
     }
     
     return totalPrice;
