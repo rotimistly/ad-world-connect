@@ -597,7 +597,7 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="priority">Priority (1-5)</Label>
+                      <Label htmlFor="priority">Display Priority</Label>
                       <Input
                         id="priority"
                         type="number"
@@ -606,6 +606,9 @@ const AdminDashboard = () => {
                         value={newAnnouncement.priority}
                         onChange={(e) => setNewAnnouncement(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Higher numbers appear first (1=Low, 3=Medium, 5=High priority)
+                      </p>
                     </div>
                   </div>
                   
@@ -717,7 +720,7 @@ const AdminDashboard = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="edit-priority">Priority (1-5)</Label>
+                        <Label htmlFor="edit-priority">Display Priority</Label>
                         <Input
                           id="edit-priority"
                           type="number"
@@ -726,6 +729,9 @@ const AdminDashboard = () => {
                           value={editingAnnouncement.priority}
                           onChange={(e) => setEditingAnnouncement(prev => prev ? { ...prev, priority: parseInt(e.target.value) } : null)}
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Higher numbers appear first (1=Low, 3=Medium, 5=High priority)
+                        </p>
                       </div>
                     </div>
                     

@@ -137,9 +137,10 @@ const CreateAdPage = () => {
     let totalPrice = basePrice;
     let currentDayPrice = basePrice;
     
-    for (let day = 2; day <= days; day++) {
-      currentDayPrice = currentDayPrice * 1.9; // Add 90% of previous day
-      totalPrice += currentDayPrice;
+    for (let day = 2; day <= Math.min(days, 30); day++) {
+      const additionalPrice = currentDayPrice * 0.9; // 90% of current price
+      currentDayPrice += additionalPrice;
+      totalPrice = currentDayPrice; // Total for all days combined
     }
     
     return totalPrice;
@@ -240,7 +241,7 @@ const CreateAdPage = () => {
           ad_id: adResult.id,
           amount: price,
           region: adData.region,
-          currency: 'NGN',
+          currency: 'USD',
           status: 'pending',
           payment_method: 'paystack'
         })
