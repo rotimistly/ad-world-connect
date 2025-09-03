@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_platforms: {
+        Row: {
+          ad_id: string
+          clicks: number | null
+          created_at: string
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          platform_name: string
+          platform_post_id: string | null
+          reach_count: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          clicks?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          platform_name: string
+          platform_post_id?: string | null
+          reach_count?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          clicks?: number | null
+          created_at?: string
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          platform_name?: string
+          platform_post_id?: string | null
+          reach_count?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           ad_format: string
@@ -35,6 +77,7 @@ export type Database = {
           price_paid: number | null
           published_at: string | null
           region: string | null
+          selected_platforms: string[] | null
           target_keywords: string[] | null
           views: number | null
         }
@@ -58,6 +101,7 @@ export type Database = {
           price_paid?: number | null
           published_at?: string | null
           region?: string | null
+          selected_platforms?: string[] | null
           target_keywords?: string[] | null
           views?: number | null
         }
@@ -81,6 +125,7 @@ export type Database = {
           price_paid?: number | null
           published_at?: string | null
           region?: string | null
+          selected_platforms?: string[] | null
           target_keywords?: string[] | null
           views?: number | null
         }
@@ -282,6 +327,42 @@ export type Database = {
           },
         ]
       }
+      platform_analytics: {
+        Row: {
+          ad_platform_id: string
+          clicks: number | null
+          created_at: string
+          date: string
+          engagement: number | null
+          id: string
+          impressions: number | null
+          reach: number | null
+          updated_at: string
+        }
+        Insert: {
+          ad_platform_id: string
+          clicks?: number | null
+          created_at?: string
+          date?: string
+          engagement?: number | null
+          id?: string
+          impressions?: number | null
+          reach?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ad_platform_id?: string
+          clicks?: number | null
+          created_at?: string
+          date?: string
+          engagement?: number | null
+          id?: string
+          impressions?: number | null
+          reach?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -359,6 +440,16 @@ export type Database = {
       calculate_ad_price: {
         Args: { distance_km: number; is_fixed_price?: boolean }
         Returns: number
+      }
+      get_ad_platform_reach: {
+        Args: { ad_id: string }
+        Returns: {
+          engagement_rate: number
+          platform_name: string
+          total_clicks: number
+          total_impressions: number
+          total_reach: number
+        }[]
       }
       get_admin_stats: {
         Args: Record<PropertyKey, never>
