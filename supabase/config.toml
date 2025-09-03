@@ -9,6 +9,9 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = true
 
+[functions.auto-publish-ad]
+verify_jwt = false
+
 [functions.initialize-payment]
 verify_jwt = true
 

@@ -8,6 +8,7 @@ import { User, Plus, Eye, MousePointer, MessageCircle, Calendar, DollarSign, Tra
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import AdPlatformAnalytics from "./AdPlatformAnalytics";
 
 interface Ad {
   id: string;
@@ -25,6 +26,17 @@ interface Ad {
   is_fixed_price: boolean;
   fixed_price_expires_at: string;
   created_at: string;
+  selected_platforms?: string[];
+}
+
+interface AdPlatform {
+  id: string;
+  platform_name: string;
+  reach_count: number;
+  impressions: number;
+  clicks: number;
+  engagement_rate: number;
+  status: string;
 }
 
 interface Business {
@@ -471,7 +483,7 @@ const UserDashboard = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm mb-4">
                       <div className="flex items-center gap-1">
                         <Eye className="w-4 h-4" />
                         <span>{ad.views || 0} views</span>
@@ -493,6 +505,15 @@ const UserDashboard = () => {
                         <span>{ad.distance_km}km range</span>
                       </div>
                     </div>
+                    
+                    {/* Platform Analytics */}
+                    {ad.paid && (
+                      <AdPlatformAnalytics 
+                        adId={ad.id}
+                        adHeadline={ad.headline}
+                        showDetailedView={false}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               ))}
