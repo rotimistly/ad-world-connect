@@ -41,15 +41,18 @@ const handler = async (req: Request): Promise<Response> => {
     // Create a unique reference for this payment
     const reference = `adboost_${paymentId}_${Date.now()}`;
 
-    // Create a mock payment system instead of Paystack to avoid API configuration issues
+    // Create a mock payment system to avoid API configuration issues
     console.log('Initializing mock payment for:', { paymentId, amount, email, reference });
     
-    // Simulate successful Paystack response
+    // Get the site URL from the request origin to avoid redirect issues
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+    
+    // Simulate successful Paystack response with proper redirect URL
     const paystackData = {
       status: true,
       message: "Authorization URL created",
       data: {
-        authorization_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment?reference=${reference}&mock=true`,
+        authorization_url: `${origin}/mock-payment?reference=${reference}`,
         access_code: `AC_${reference}`,
         reference: reference
       }

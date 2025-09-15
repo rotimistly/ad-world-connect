@@ -28,9 +28,9 @@ const MockPaymentPage = () => {
     
     setIsProcessing(true);
     
-    // Simulate processing time
+    // Simulate processing time then redirect to verify payment
     setTimeout(() => {
-      // Redirect to verify payment with mock parameter
+      // Call the verify-payment edge function directly with mock parameter
       const verifyUrl = `${window.location.origin}/functions/v1/verify-payment?reference=${reference}&mock=true`;
       window.location.href = verifyUrl;
     }, 1500);
