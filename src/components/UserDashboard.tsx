@@ -72,7 +72,29 @@ const UserDashboard = () => {
 
   useEffect(() => {
     checkUser();
+    checkUrlParams();
   }, []);
+
+  const checkUrlParams = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'payment_completed') {
+      toast({
+        title: "Payment Successful! 🎉",
+        description: "Your ad has been published and is now live across selected platforms.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (urlParams.get('error')) {
+      toast({
+        title: "Payment Error",
+        description: "There was an issue with your payment. Please try again.",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  };
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
