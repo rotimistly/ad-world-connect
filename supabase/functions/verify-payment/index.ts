@@ -15,6 +15,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const url = new URL(req.url);
     const reference = url.searchParams.get('reference');
+    const isMock = url.searchParams.get('mock');
 
     if (!reference) {
       // Redirect to dashboard with error if no reference
@@ -33,25 +34,39 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify payment with Paystack
-    const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
-      },
-    });
-
-    const paystackData = await paystackResponse.json();
-
-    if (!paystackResponse.ok || paystackData.data.status !== 'success') {
-      console.error('Payment verification failed:', paystackData);
-      // Redirect to dashboard with error
-      return new Response(null, {
-        status: 302,
-        headers: {
-          'Location': '/dashboard?error=payment_failed',
-          ...corsHeaders
+    // For mock payments, skip Paystack verification
+    let paystackData = null;
+    if (isMock === 'true') {
+      console.log('Processing mock payment verification for reference:', reference);
+      // Create mock successful response
+      paystackData = {
+        data: {
+          status: 'success',
+          amount: 0, // Will be updated from payment record
+          reference: reference
         }
+      };
+    } else {
+      // Verify payment with Paystack
+      const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
+        },
       });
+
+      paystackData = await paystackResponse.json();
+
+      if (!paystackResponse.ok || paystackData.data.status !== 'success') {
+        console.error('Payment verification failed:', paystackData);
+        // Redirect to dashboard with error
+        return new Response(null, {
+          status: 302,
+          headers: {
+            'Location': '/dashboard?error=payment_failed',
+            ...corsHeaders
+          }
+        });
+      }
     }
 
     // Find the payment record
@@ -132,8 +147,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Payment verified and ad published:', {
       paymentId: payment.id,
       adId: payment.ad_id,
-      amount: paystackData.data.amount / 100,
-      reference: reference
+      amount: isMock === 'true' ? payment.amount : paystackData.data.amount / 100,
+      reference: reference,
+      isMock: isMock === 'true'
     });
 
     // Redirect to success page

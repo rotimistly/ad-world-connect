@@ -108,7 +108,7 @@ const PaymentPage = () => {
 
       if (error) throw error;
 
-      // Redirect to Paystack checkout
+      // Redirect to mock payment page for demonstration
       window.location.href = data.authorization_url;
     } catch (error: any) {
       toast({
