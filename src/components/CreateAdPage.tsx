@@ -95,41 +95,8 @@ const CreateAdPage = () => {
   };
 
   const calculateDistancePrice = (distanceKm: number) => {
-    if (distanceKm <= 100) {
-      return 5.00; // Base price for 100km
-    }
-    
-    // Calculate cumulative price with 90% increment for each tier
-    let totalPrice = 5.00; // Base price for 100km
-    let currentPrice = 5.00;
-    
-    const tiers = [
-      { max: 200, label: "200km" },
-      { max: 300, label: "300km" },
-      { max: 400, label: "400km" },
-      { max: 500, label: "500km" },
-      { max: 1000, label: "1000km" },
-      { max: 2000, label: "2000km" },
-      { max: 5000, label: "5000km" },
-      { max: 10000, label: "10000km" },
-      { max: 20000, label: "20000km" },
-      { max: 40000, label: "40000km" },
-      { max: 60000, label: "60000km" }
-    ];
-    
-    for (const tier of tiers) {
-      if (distanceKm > (tier.max === 200 ? 100 : tiers[tiers.indexOf(tier) - 1]?.max || 100) && distanceKm <= tier.max) {
-        currentPrice = currentPrice * 1.9; // Add 90% of previous price
-        totalPrice = currentPrice;
-        break;
-      }
-      if (distanceKm > tier.max) {
-        currentPrice = currentPrice * 1.9;
-        totalPrice = currentPrice;
-      }
-    }
-    
-    return totalPrice;
+    // Simple rate: $0.07 per km
+    return distanceKm * 0.07;
   };
 
   const calculateDaysPrice = (basePrice: number, days: number) => {
@@ -585,22 +552,20 @@ const CreateAdPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="1">1 km - ${calculateDistancePrice(1).toFixed(2)}</SelectItem>
+                      <SelectItem value="5">5 km - ${calculateDistancePrice(5).toFixed(2)}</SelectItem>
+                      <SelectItem value="10">10 km - ${calculateDistancePrice(10).toFixed(2)}</SelectItem>
+                      <SelectItem value="25">25 km - ${calculateDistancePrice(25).toFixed(2)}</SelectItem>
+                      <SelectItem value="50">50 km - ${calculateDistancePrice(50).toFixed(2)}</SelectItem>
                       <SelectItem value="100">100 km - ${calculateDistancePrice(100).toFixed(2)}</SelectItem>
                       <SelectItem value="200">200 km - ${calculateDistancePrice(200).toFixed(2)}</SelectItem>
-                      <SelectItem value="300">300 km - ${calculateDistancePrice(300).toFixed(2)}</SelectItem>
-                      <SelectItem value="400">400 km - ${calculateDistancePrice(400).toFixed(2)}</SelectItem>
                       <SelectItem value="500">500 km - ${calculateDistancePrice(500).toFixed(2)}</SelectItem>
                       <SelectItem value="1000">1000 km - ${calculateDistancePrice(1000).toFixed(2)}</SelectItem>
                       <SelectItem value="2000">2000 km - ${calculateDistancePrice(2000).toFixed(2)}</SelectItem>
-                      <SelectItem value="5000">5000 km - ${calculateDistancePrice(5000).toFixed(2)}</SelectItem>
-                      <SelectItem value="10000">10000 km - ${calculateDistancePrice(10000).toFixed(2)}</SelectItem>
-                      <SelectItem value="20000">20000 km - ${calculateDistancePrice(20000).toFixed(2)}</SelectItem>
-                      <SelectItem value="40000">40000 km - ${calculateDistancePrice(40000).toFixed(2)}</SelectItem>
-                      <SelectItem value="60000">60000 km - ${calculateDistancePrice(60000).toFixed(2)}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    Pricing increases by 90% for each distance tier above 100km
+                    Simple rate: $0.07 per kilometer
                   </p>
                 </div>
 
