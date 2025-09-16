@@ -10,7 +10,6 @@ import AuthPage from "./components/AuthPage";
 import UserDashboard from "./components/UserDashboard";
 import CreateAdPage from "./components/CreateAdPage";
 import PaymentPage from "./components/PaymentPage";
-import MockPaymentPage from "./components/MockPaymentPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./components/AdminDashboard";
 import AdsListingPage from "./components/AdsListingPage";
@@ -43,7 +42,6 @@ const App = () => (
                 <PaymentPage />
               </ProtectedRoute>
             } />
-            <Route path="/mock-payment" element={<MockPaymentPage />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />

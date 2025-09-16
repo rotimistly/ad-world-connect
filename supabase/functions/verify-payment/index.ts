@@ -34,17 +34,28 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Verifying mock payment with reference:', reference);
+    console.log('Verifying payment with reference:', reference);
 
-    // For development, simulate successful payment verification
-    const paystackData = {
-      status: true,
-      data: {
-        status: 'success',
-        amount: 700, // $0.07 in kobo
-        reference: reference
-      }
-    };
+    // Verify payment with Paystack
+    const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
+      },
+    });
+
+    const paystackData = await paystackResponse.json();
+
+    if (!paystackResponse.ok || paystackData.data.status !== 'success') {
+      console.error('Payment verification failed:', paystackData);
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${origin}/dashboard?error=payment_failed`,
+          ...corsHeaders
+        }
+      });
+    }
 
     // Find the payment record
     const { data: payment, error: paymentError } = await supabase
