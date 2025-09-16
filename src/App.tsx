@@ -13,7 +13,6 @@ import PaymentPage from "./components/PaymentPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./components/AdminDashboard";
 import AdsListingPage from "./components/AdsListingPage";
-import MockPaymentPage from "./components/MockPaymentPage";
 
 const queryClient = new QueryClient();
 
@@ -43,7 +42,6 @@ const App = () => (
                 <PaymentPage />
               </ProtectedRoute>
             } />
-            <Route path="/mock-payment" element={<MockPaymentPage />} />
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />

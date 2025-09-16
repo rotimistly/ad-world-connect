@@ -15,14 +15,14 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const url = new URL(req.url);
     const reference = url.searchParams.get('reference');
-    const isMock = url.searchParams.get('mock');
 
     if (!reference) {
-      // Redirect to dashboard with error if no reference
+      // Get origin for proper redirect
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/dashboard?error=invalid_reference',
+          'Location': `${origin}/dashboard?error=invalid_reference`,
           ...corsHeaders
         }
       });
@@ -34,39 +34,27 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // For mock payments, skip Paystack verification
-    let paystackData = null;
-    if (isMock === 'true') {
-      console.log('Processing mock payment verification for reference:', reference);
-      // Create mock successful response
-      paystackData = {
-        data: {
-          status: 'success',
-          amount: 0, // Will be updated from payment record
-          reference: reference
-        }
-      };
-    } else {
-      // Verify payment with Paystack
-      const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+    console.log('Verifying payment with reference:', reference);
+
+    // Verify payment with Paystack
+    const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
+      },
+    });
+
+    const paystackData = await paystackResponse.json();
+
+    if (!paystackResponse.ok || paystackData.data.status !== 'success') {
+      console.error('Payment verification failed:', paystackData);
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      return new Response(null, {
+        status: 302,
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
-        },
+          'Location': `${origin}/dashboard?error=payment_failed`,
+          ...corsHeaders
+        }
       });
-
-      paystackData = await paystackResponse.json();
-
-      if (!paystackResponse.ok || paystackData.data.status !== 'success') {
-        console.error('Payment verification failed:', paystackData);
-        // Redirect to dashboard with error
-        return new Response(null, {
-          status: 302,
-          headers: {
-            'Location': '/dashboard?error=payment_failed',
-            ...corsHeaders
-          }
-        });
-      }
     }
 
     // Find the payment record
@@ -78,10 +66,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (paymentError || !payment) {
       console.error('Payment record not found:', paymentError);
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': '/dashboard?error=payment_not_found',
+          'Location': `${origin}/dashboard?error=payment_not_found`,
           ...corsHeaders
         }
       });
@@ -147,26 +136,27 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Payment verified and ad published:', {
       paymentId: payment.id,
       adId: payment.ad_id,
-      amount: isMock === 'true' ? payment.amount : paystackData.data.amount / 100,
-      reference: reference,
-      isMock: isMock === 'true'
+      amount: paystackData.data.amount / 100,
+      reference: reference
     });
 
     // Redirect to success page
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/dashboard?success=payment_completed',
+        'Location': `${origin}/dashboard?success=payment_completed`,
         ...corsHeaders
       }
     });
 
   } catch (error: any) {
     console.error('Error in verify-payment function:', error);
+    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': '/dashboard?error=verification_failed',
+        'Location': `${origin}/dashboard?error=verification_failed`,
         ...corsHeaders
       }
     });

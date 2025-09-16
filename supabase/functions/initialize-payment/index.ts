@@ -41,22 +41,45 @@ const handler = async (req: Request): Promise<Response> => {
     // Create a unique reference for this payment
     const reference = `adboost_${paymentId}_${Date.now()}`;
 
-    // Create a mock payment system to avoid API configuration issues
-    console.log('Initializing mock payment for:', { paymentId, amount, email, reference });
+    // Initialize real Paystack payment
+    console.log('Initializing Paystack payment for:', { paymentId, amount, email, reference });
     
-    // Get the site URL from the request origin to avoid redirect issues
+    // Get the site URL from the request origin for redirect
     const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+    const callbackUrl = `${origin}/functions/v1/verify-payment?reference=${reference}`;
     
-    // Simulate successful Paystack response with proper redirect URL
-    const paystackData = {
-      status: true,
-      message: "Authorization URL created",
-      data: {
-        authorization_url: `${origin}/mock-payment?reference=${reference}`,
-        access_code: `AC_${reference}`,
-        reference: reference
-      }
-    };
+    // Make request to Paystack API
+    const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        amount: Math.round(amount * 100), // Convert to kobo/cents
+        currency: currency || 'USD',
+        reference: reference,
+        callback_url: callbackUrl,
+        metadata: {
+          payment_id: paymentId,
+          ad_id: paymentId // Using paymentId as ad reference
+        }
+      })
+    });
+
+    const paystackData = await paystackResponse.json();
+    
+    if (!paystackData.status) {
+      console.error('Paystack initialization failed:', paystackData);
+      return new Response(
+        JSON.stringify({ error: 'Payment initialization failed: ' + paystackData.message }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
 
     // Update payment record with Paystack details
     const { error: updateError } = await supabase
