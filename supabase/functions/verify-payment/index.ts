@@ -37,16 +37,42 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('Verifying payment with reference:', reference);
 
     // Verify payment with Paystack
-    const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
-      },
-    });
+    let paystackResponse;
+    let paystackData;
+    
+    try {
+      paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
+        },
+      });
 
-    const paystackData = await paystackResponse.json();
+      paystackData = await paystackResponse.json();
+      console.log('Paystack verification response:', { 
+        status: paystackResponse.status, 
+        success: paystackData.status,
+        transactionStatus: paystackData.data?.status 
+      });
+      
+    } catch (fetchError) {
+      console.error('Network error verifying payment:', fetchError);
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${origin}/dashboard?error=verification_network_error`,
+          ...corsHeaders
+        }
+      });
+    }
 
-    if (!paystackResponse.ok || paystackData.data.status !== 'success') {
-      console.error('Payment verification failed:', paystackData);
+    if (!paystackResponse.ok || !paystackData.status || paystackData.data?.status !== 'success') {
+      console.error('Payment verification failed:', {
+        httpStatus: paystackResponse.status,
+        paystackStatus: paystackData.status,
+        transactionStatus: paystackData.data?.status,
+        paystackData
+      });
       const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
       return new Response(null, {
         status: 302,

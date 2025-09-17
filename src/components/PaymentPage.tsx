@@ -91,10 +91,16 @@ const PaymentPage = () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const userEmail = sessionData.session?.user.email;
       if (!userEmail) {
-        toast({ title: "Error", description: "Please log in again to continue.", variant: "destructive" });
+        toast({ 
+          title: "Authentication Required", 
+          description: "Please log in again to continue with payment.", 
+          variant: "destructive" 
+        });
         setIsProcessing(false);
         return;
       }
+
+      console.log('Initializing payment with:', { paymentId, amount: payment!.amount, email: userEmail });
 
       // Call edge function to initialize Paystack payment
       const { data, error } = await supabase.functions.invoke('initialize-payment', {
@@ -102,18 +108,43 @@ const PaymentPage = () => {
           paymentId,
           amount: payment!.amount,
           email: userEmail,
-          currency: payment!.currency
+          currency: payment!.currency || 'USD'
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to initialize payment');
+      }
 
-      // Redirect to mock payment page for demonstration
+      if (!data || !data.authorization_url) {
+        throw new Error('Invalid payment response received');
+      }
+
+      console.log('Payment initialized successfully, redirecting to:', data.authorization_url);
+
+      // Redirect to Paystack payment page
       window.location.href = data.authorization_url;
     } catch (error: any) {
+      console.error('Payment initialization error:', error);
+      
+      let errorMessage = "Failed to initialize payment. ";
+      
+      if (error.message?.includes('Payment service is currently unavailable')) {
+        errorMessage = "Payment service is temporarily unavailable. Please try again in a few minutes or contact support.";
+      } else if (error.message?.includes('Payment service not configured')) {
+        errorMessage = "Payment system is not properly configured. Please contact support.";
+      } else if (error.message?.includes('Unable to connect')) {
+        errorMessage = "Network connection issue. Please check your internet and try again.";
+      } else if (error.message) {
+        errorMessage += error.message;
+      } else {
+        errorMessage += "Please try again or contact support if the problem persists.";
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to initialize payment",
+        title: "Payment Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -38,6 +38,19 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Check if Paystack secret key is available
+    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY');
+    if (!paystackSecretKey) {
+      console.error('PAYSTACK_SECRET_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'Payment service not configured. Please contact support.' }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
+
     // Create a unique reference for this payment
     const reference = `adboost_${paymentId}_${Date.now()}`;
 
@@ -49,31 +62,65 @@ const handler = async (req: Request): Promise<Response> => {
     const callbackUrl = `${origin}/functions/v1/verify-payment?reference=${reference}`;
     
     // Make request to Paystack API
-    const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('PAYSTACK_SECRET_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: email,
-        amount: Math.round(amount * 100), // Convert to kobo/cents
-        currency: currency || 'USD',
-        reference: reference,
-        callback_url: callbackUrl,
-        metadata: {
-          payment_id: paymentId,
-          ad_id: paymentId // Using paymentId as ad reference
-        }
-      })
-    });
-
-    const paystackData = await paystackResponse.json();
+    let paystackResponse;
+    let paystackData;
     
-    if (!paystackData.status) {
-      console.error('Paystack initialization failed:', paystackData);
+    try {
+      paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${paystackSecretKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          amount: Math.round(amount * 100), // Convert to kobo/cents
+          currency: currency || 'USD',
+          reference: reference,
+          callback_url: callbackUrl,
+          metadata: {
+            payment_id: paymentId,
+            ad_id: paymentId // Using paymentId as ad reference
+          }
+        })
+      });
+
+      paystackData = await paystackResponse.json();
+      console.log('Paystack API response:', { status: paystackResponse.status, data: paystackData });
+      
+    } catch (fetchError) {
+      console.error('Network error calling Paystack API:', fetchError);
       return new Response(
-        JSON.stringify({ error: 'Payment initialization failed: ' + paystackData.message }),
+        JSON.stringify({ error: 'Unable to connect to payment service. Please try again later.' }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
+    
+    if (!paystackResponse.ok || !paystackData.status) {
+      console.error('Paystack initialization failed:', {
+        httpStatus: paystackResponse.status,
+        paystackResponse: paystackData
+      });
+      
+      // Provide specific error messages based on Paystack response
+      let errorMessage = 'Payment initialization failed. ';
+      if (paystackData.message) {
+        if (paystackData.message.includes('No active channel')) {
+          errorMessage += 'Payment service is currently unavailable. Please contact support or try again later.';
+        } else if (paystackData.message.includes('Invalid key')) {
+          errorMessage += 'Payment service configuration error. Please contact support.';
+        } else {
+          errorMessage += paystackData.message;
+        }
+      } else {
+        errorMessage += 'Please try again or contact support.';
+      }
+      
+      return new Response(
+        JSON.stringify({ error: errorMessage }),
         {
           status: 400,
           headers: { 'Content-Type': 'application/json', ...corsHeaders },
