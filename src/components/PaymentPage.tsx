@@ -286,11 +286,19 @@ const PaymentPage = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total Amount:</span>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="w-5 h-5" />
-                    <span>{payment.amount} {payment.currency}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="w-5 h-5" />
+                      <span>{payment.amount} {payment.currency}</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      ≈ ₦{Math.round(payment.amount * 1650).toLocaleString()} NGN
+                    </div>
                   </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Payment will be processed in Nigerian Naira (NGN) through Paystack
+                </p>
               </div>
             </CardContent>
           </Card>

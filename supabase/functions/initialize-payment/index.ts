@@ -74,13 +74,15 @@ const handler = async (req: Request): Promise<Response> => {
         },
         body: JSON.stringify({
           email: email,
-          amount: Math.round(amount * 100), // Convert to kobo/cents
-          currency: currency || 'USD',
+          amount: Math.round(amount * 165000), // Convert USD to NGN kobo (1 USD = ~1650 NGN)
+          currency: 'NGN', // Force NGN as Paystack primarily supports this
           reference: reference,
           callback_url: callbackUrl,
           metadata: {
             payment_id: paymentId,
-            ad_id: paymentId // Using paymentId as ad reference
+            ad_id: paymentId, // Using paymentId as ad reference
+            original_amount_usd: amount,
+            original_currency: currency || 'USD'
           }
         })
       });

@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-contact-message]
 verify_jwt = false
+
+[functions.test-paystack]
+verify_jwt = false
