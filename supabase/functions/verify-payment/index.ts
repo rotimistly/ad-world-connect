@@ -17,8 +17,8 @@ const handler = async (req: Request): Promise<Response> => {
     const reference = url.searchParams.get('reference');
 
     if (!reference) {
-      // Get origin for proper redirect
-      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      // Get origin for proper redirect - use current domain
+      const origin = new URL(req.url).origin;
       return new Response(null, {
         status: 302,
         headers: {
@@ -56,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
       
     } catch (fetchError) {
       console.error('Network error verifying payment:', fetchError);
-      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      const origin = new URL(req.url).origin;
       return new Response(null, {
         status: 302,
         headers: {
@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
         transactionStatus: paystackData.data?.status,
         paystackData
       });
-      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      const origin = new URL(req.url).origin;
       return new Response(null, {
         status: 302,
         headers: {
@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (paymentError || !payment) {
       console.error('Payment record not found:', paymentError);
-      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+      const origin = new URL(req.url).origin;
       return new Response(null, {
         status: 302,
         headers: {
@@ -167,7 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Redirect to success page
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+    const origin = new URL(req.url).origin;
     return new Response(null, {
       status: 302,
       headers: {
@@ -178,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   } catch (error: any) {
     console.error('Error in verify-payment function:', error);
-    const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || 'http://localhost:8080';
+    const origin = new URL(req.url).origin;
     return new Response(null, {
       status: 302,
       headers: {
