@@ -17,12 +17,23 @@ const handler = async (req: Request): Promise<Response> => {
     const reference = url.searchParams.get('reference');
 
     if (!reference) {
-      // Get origin for proper redirect - use current domain
-      const origin = new URL(req.url).origin;
+      // Get frontend origin for proper redirect
+      const referer = req.headers.get('referer');
+      let frontendOrigin = 'https://loving-caring-whale.lovableproject.com';
+      
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          frontendOrigin = refererUrl.origin;
+        } catch (e) {
+          console.log('Could not parse referer, using default origin');
+        }
+      }
+      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${origin}/dashboard?error=invalid_reference`,
+          'Location': `${frontendOrigin}/dashboard?error=invalid_reference`,
           ...corsHeaders
         }
       });
@@ -56,11 +67,22 @@ const handler = async (req: Request): Promise<Response> => {
       
     } catch (fetchError) {
       console.error('Network error verifying payment:', fetchError);
-      const origin = new URL(req.url).origin;
+      const referer = req.headers.get('referer');
+      let frontendOrigin = 'https://loving-caring-whale.lovableproject.com';
+      
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          frontendOrigin = refererUrl.origin;
+        } catch (e) {
+          console.log('Could not parse referer, using default origin');
+        }
+      }
+      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${origin}/dashboard?error=verification_network_error`,
+          'Location': `${frontendOrigin}/dashboard?error=verification_network_error`,
           ...corsHeaders
         }
       });
@@ -73,11 +95,22 @@ const handler = async (req: Request): Promise<Response> => {
         transactionStatus: paystackData.data?.status,
         paystackData
       });
-      const origin = new URL(req.url).origin;
+      const referer = req.headers.get('referer');
+      let frontendOrigin = 'https://loving-caring-whale.lovableproject.com';
+      
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          frontendOrigin = refererUrl.origin;
+        } catch (e) {
+          console.log('Could not parse referer, using default origin');
+        }
+      }
+      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${origin}/dashboard?error=payment_failed`,
+          'Location': `${frontendOrigin}/dashboard?error=payment_failed`,
           ...corsHeaders
         }
       });
@@ -92,11 +125,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (paymentError || !payment) {
       console.error('Payment record not found:', paymentError);
-      const origin = new URL(req.url).origin;
+      const referer = req.headers.get('referer');
+      let frontendOrigin = 'https://loving-caring-whale.lovableproject.com';
+      
+      if (referer) {
+        try {
+          const refererUrl = new URL(referer);
+          frontendOrigin = refererUrl.origin;
+        } catch (e) {
+          console.log('Could not parse referer, using default origin');
+        }
+      }
+      
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${origin}/dashboard?error=payment_not_found`,
+          'Location': `${frontendOrigin}/dashboard?error=payment_not_found`,
           ...corsHeaders
         }
       });
@@ -166,23 +210,46 @@ const handler = async (req: Request): Promise<Response> => {
       reference: reference
     });
 
-    // Redirect to success page
-    const origin = new URL(req.url).origin;
+    // Redirect to success page - determine correct frontend URL
+    const referer = req.headers.get('referer');
+    let frontendOrigin = 'https://loving-caring-whale.lovableproject.com'; // Default fallback
+    
+    if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        frontendOrigin = refererUrl.origin;
+      } catch (e) {
+        console.log('Could not parse referer, using default origin');
+      }
+    }
+    
+    console.log('Redirecting to:', `${frontendOrigin}/dashboard?success=payment_completed`);
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': `${origin}/dashboard?success=payment_completed`,
+        'Location': `${frontendOrigin}/dashboard?success=payment_completed`,
         ...corsHeaders
       }
     });
 
   } catch (error: any) {
     console.error('Error in verify-payment function:', error);
-    const origin = new URL(req.url).origin;
+    const referer = req.headers.get('referer');
+    let frontendOrigin = 'https://loving-caring-whale.lovableproject.com';
+    
+    if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        frontendOrigin = refererUrl.origin;
+      } catch (e) {
+        console.log('Could not parse referer, using default origin');
+      }
+    }
+    
     return new Response(null, {
       status: 302,
       headers: {
-        'Location': `${origin}/dashboard?error=verification_failed`,
+        'Location': `${frontendOrigin}/dashboard?error=verification_failed`,
         ...corsHeaders
       }
     });
